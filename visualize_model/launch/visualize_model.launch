@@ -1,0 +1,4 @@
+<launch>
+        <param name="robot_description" command="cat $(find visualize_model)/robot_model.urdf" />
+        <node name="visualize_model" pkg="visualize_model" type="visualize_model" />
+</launch>

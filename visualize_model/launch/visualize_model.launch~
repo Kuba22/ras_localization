@@ -1,0 +1,4 @@
+<launch>
+        <param name="robot_description" command="cat $(find ras_lab1_tf_test)/robot_model.urdf" />
+        <node name="ras_lab1_tf_test" pkg="ras_lab1_tf_test" type="ras_lab1_tf_test" />
+</launch>
