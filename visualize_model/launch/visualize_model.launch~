@@ -1,4 +1,16 @@
 <launch>
-        <param name="robot_description" command="cat $(find ras_lab1_tf_test)/robot_model.urdf" />
-        <node name="ras_lab1_tf_test" pkg="ras_lab1_tf_test" type="ras_lab1_tf_test" />
+        <param name="robot_description" command="cat $(find visualize_model)/robot_model.urdf" />
+        
+        
+        <node pkg="tf" type="static_transform_publisher" name="laser_to_odom" 
+args="0.09 0 0 0 0 1 0 /base_link /laser 30" />
+
+        <node name="odometry" pkg="ras_odometry" type="odometry" />
+        
+        <include file="$(find rplidar_ros)/launch/rplidar.launch"/>
+        
+        <node pkg="rviz" type="rviz" name="my_rviz" 
+   args="-f odom"/>
+
+
 </launch>

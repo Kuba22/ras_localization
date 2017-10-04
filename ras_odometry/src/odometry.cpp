@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <phidgets/motor_encoder.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <tf/transform_broadcaster.h>
 
 const double r = 0.036;
 const double b = 0.242;
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
 {
     ros::init(argc, argv, "odometry");
     ros::NodeHandle nh;
+    tf::TransformBroadcaster broadcaster;
 
     int frequency;
     nh.param("frequency", frequency, 30);
@@ -34,6 +36,12 @@ int main(int argc, char *argv[])
     ros::Subscriber encoder_right_sub = nh.subscribe("/motorcontrol/encoder_right", 100, &EncoderRightCallback);
 
     ros::Publisher pose_pub = nh.advertise<geometry_msgs::PoseStamped>("localization/odometry_pose", 1);
+
+    // message declarations for rviz
+    geometry_msgs::TransformStamped odom_trans;
+    //sensor_msgs::JointState joint_state;
+    odom_trans.header.frame_id = "odom";
+    odom_trans.child_frame_id = "base_link";
 
     ros::Rate loop_rate(frequency);
     double theta = 0.0, x = 0.0, y = 0.0; // this will have to be initialized with the use of the laser scan
@@ -55,7 +63,19 @@ int main(int argc, char *argv[])
         pose_stamped.pose.orientation.z = sin(theta*0.5);
         pose_stamped.pose.orientation.w = cos(theta*0.5);
 
+
+
         pose_pub.publish(pose_stamped);
+
+        // update transform
+        // (moving in a circle with radius=2)
+        odom_trans.header.stamp = ros::Time::now();
+        odom_trans.transform.translation.x = x;
+        odom_trans.transform.translation.y = y;
+        odom_trans.transform.translation.z = 0;
+        odom_trans.transform.rotation =     tf::createQuaternionMsgFromYaw(theta);
+        //send the joint state and transform
+        broadcaster.sendTransform(odom_trans);
 
         accumulated_left = accumulated_right = 0;
 
