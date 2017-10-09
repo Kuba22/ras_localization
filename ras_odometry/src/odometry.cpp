@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     double theta = 0.0, x = 0.0, y = 0.0; // this will have to be initialized with the use of the laser scan
     while(nh.ok())
     {
-        double w_right = ((double)accumulated_right) * 2 * 3.14159 / ticks_per_rev * frequency;
+        double w_right = -((double)accumulated_right) * 2 * 3.14159 / ticks_per_rev * frequency;
         double w_left = ((double)accumulated_left) * 2 * 3.14159 / ticks_per_rev * frequency;
         double w = (w_right - w_left)*r/b;
         double v = (w_right + w_left)*r*0.5;
