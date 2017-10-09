@@ -51,9 +51,9 @@ int main(int argc, char *argv[])
         double w_left = ((double)accumulated_left) * 2 * 3.14159 / ticks_per_rev * frequency;
         double w = (w_right - w_left)*r/b;
         double v = (w_right + w_left)*r*0.5;
-        theta += w;
-        x += v*cos(theta);
-        y += v*sin(theta);
+        theta += w/frequency;
+        x += v*cos(theta)/frequency;
+        y += v*sin(theta)/frequency;
 
         geometry_msgs::PoseStamped pose_stamped;
         pose_stamped.header.stamp = ros::Time::now();
