@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="rosbag" type="play" name="player" args="--clock /home/ras/catkin_ws/src/ras_rplidar/ScanBagFiles/long-2017-10-24-19-37-26.bag" />
+	<node pkg="ras_line_detector" type="line_detector.py" name="line_detector" output="screen"/>
+</launch>
