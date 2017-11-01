@@ -15,16 +15,15 @@ def getPrevious(a, n):
 
 def	moveUntilDifferent(a, n, direction):
 	# dir +-1
-	if n + direction == len(a):
-		if a[n] == a[0]:
-			return moveUntilDifferent(a, 0, direction)
-		else:
-			return 0
+	curr_val = a[n]	
+	if n + direction < 0:
+		n += len(a)
+	if n + direction >= len(a):
+		n -= len(a)
+	if a[n+direction] == curr_val:
+		return moveUntilDifferent(a, n+direction, direction)
 	else:
-		if a[n+direction] == a[n]:
-			return moveUntilDifferent(a, n+direction, direction)
-		else:
-			return n+direction
+		return n+direction
 	
 def getMin(a):
 	mins = []
@@ -37,7 +36,7 @@ def getMin(a):
 				mins.append(m if not m < 0 else m + len(a))
 			else:
 				m = int(round((k + j + len(a)) * 0.5))
-				mins.append(m if not m < 0 else m + len(a))
+				mins.append(m if not m >= len(a) else m - len(a))
 	return set(mins)
 
 
@@ -64,7 +63,7 @@ class LineDetector:
 		N = 5
 		noinf_Nlonger = np.append(noinf, noinf[:N])
 		noinf_Nlonger = np.insert(noinf_Nlonger, 0, noinf[-N:])
-		gaussian_smoothed = np.convolve(general_gaussian(2*N+1, p=1, sig=16), noinf_Nlonger, mode='valid')
+		gaussian_smoothed = np.convolve(general_gaussian(2*N+1, p=1, sig=20), noinf_Nlonger, mode='valid')
 		grad = np.gradient(noinf)
 		incontinuities = np.where(np.absolute(grad) > 0.1)
 		minima = getMin(gaussian_smoothed)
