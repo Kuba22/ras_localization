@@ -102,9 +102,12 @@ public:
 
 	mat weight(mat S_bar, cube Psi, rowvec outlier)
 	{
-		mat p;
-		p = prod(Psi(m2cpp::span<uvec>(0, Psi.n_rows - 1) - 1, outlier == 0 - 1, m2cpp::span<uvec>(0, Psi.n_slices - 1) - 1), 2);
-		S_bar.row(3) = p / double(arma::as_scalar(arma::sum(arma:vectorize(p))));
+		int n = outlier.size();
+		int M = S_bar.n_cols;
+
+		mat psi = reshape(Psi, n, M, 1);
+		rowvec p = prod(psi.rows(find(outlier == true)), 1).t();
+		S_bar.row(3) = p / sum(p);
 		return S_bar;
 	}
 
