@@ -111,25 +111,22 @@ public:
 		return S_bar;
 	}
 
-	mat systematic_resample(mat S_bar)
+	mat resample(mat S_bar)
 	{
-		double r_0;
-		int M, m;
-		mat S, cdf;
-		urowvec _aux_urowvec_1;
-		uvec i;
-		cdf = cumsum(S_bar.row(3));
-		M = S_bar.row(0).n_cols;
-		S.rows(arma::span(0, 2)).fill(arma::zeros<mat>(S_bar.rows(arma::span(0, 2)).n_rows, S_bar.rows(arma::span(0, 2)).n_cols));
-		r_0 = double(arma::as_scalar(arma::randu<vec>(1) / M));
-		for (m = 1; m <= M; m++)
+		rowvec cdf = cumsum(S_bar.row(3));
+		int M = S_bar.n_cols;
+		mat S(4, M);
+		S.rows(arma::span(0, 2)).fill(0);
+		double r_0 = double(arma::as_scalar(arma::randu<vec>(1) / M));
+		for (int m = 0; m < M; m++)
 		{
-			i = find(cdf >= r_0, 1, "first") + 1;
-			S(m2cpp::span<uvec>(0, 2), m2cpp::span<uvec>(m - 1, m - 1)) = S_bar(m2cpp::span<uvec>(0, 2), i);
-			r_0 = r_0 + 1 * 1.0 / M;
+			int i = as_scalar(find(cdf >= r_0, 1));
+			S(0, m) = S_bar(0, i);
+			S(1, m) = S_bar(1, i);
+			S(2, m) = S_bar(2, i);
+			r_0 = r_0 + 1.0 / M;
 		}
-		_aux_urowvec_1 = { S_bar.row(3).n_rows, S_bar.row(3).n_cols };
-		S.row(3).fill(1 * 1.0 / M*arma::ones<double>(_aux_urowvec_1));
+		S.row(3) = 1.0 / M * ones(1, M);
 		return S;
 	}
 
@@ -140,7 +137,10 @@ public:
 		mat S_bar = predict(S, v, omega, R, delta_t);
 		associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
 		outliers = double(arma::as_scalar(arma::sum(outlier)));
+		if (outliers == 0) {
+			return;
+		}
 		S_bar = weight(S_bar, Psi, outlier);
-		S = systematic_resample(S_bar);
+		S = resample(S_bar);
 	}
 };
