@@ -36,7 +36,6 @@ mat readLines(string map_file)
 		line_stream >> x1 >> y1 >> x2 >> y2;
 
 		rowvec linevec({ x1, y1, x2, y2 });
-		cout << linevec << endl;
 		join_cols(lines, linevec);
 	}
 
@@ -69,14 +68,15 @@ vec perpendicularThroughPoint(vec line, vec point){
 	return ret;
 }
 
-void measurement(double& theta, double& rho, vec line, vec robot)
+vec measurement(vec line, vec robot)
 {
 	vec l1({ line[0], line[1] });
 	vec l2({ line[2], line[3] });
 	vec ll = crossProduct(l1, l2);
 	vec pl = perpendicularThroughPoint(ll, robot);
 	vec r = crossProduct(ll, pl);
-	rho = sqrt((r[0] / r[2] - robot[0])*(r[0] / r[2] - robot[0]) + (r[1] / r[2] - robot[1])*(r[1] / r[2] - robot[1]));
+	double rho = sqrt((r[0] / r[2] - robot[0])*(r[0] / r[2] - robot[0]) + (r[1] / r[2] - robot[1])*(r[1] / r[2] - robot[1]));
 	double phi = atan2(r[1] / r[2] - robot[1], r[0] / r[2] - robot[0]);
-	theta = phi - robot[2];
+	double theta = phi - robot[2];
+	return vec({ theta, rho });
 }

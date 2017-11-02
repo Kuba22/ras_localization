@@ -1,10 +1,11 @@
 #include <cmath>
 #include <armadillo>
+#include "PfHelper.h"
 
 using namespace arma;
 
 class ParticleFilter {
-
+public:
 	void init(vec bound, vec start_pose, mat& S, mat& R, mat& Q, double& Lambda_psi)
 	{
 		int M, part_bound;
@@ -27,23 +28,30 @@ class ParticleFilter {
 
 	mat observation_model(mat S, mat W, int j)
 	{
-		rowvec bearings = atan2(W(1, j - 1) - S.row(1), W(0, j - 1) - S.row(0)) - S.row(2) + datum::pi - floor((atan2(W(1, j - 1) - S.row(1), W(0, j - 1) - S.row(0)) - S.row(2) + datum::pi) / (2 * datum::pi)) * 2 * datum::pi - datum::pi;
-		rowvec ranges = sqrt(arma::square((W(0, j - 1) - S.row(0))) + arma::square((W(1, j - 1) - S.row(1))));
-		mat h = join_cols(ranges, bearings);
+		vec line = W.row(j).t();
+		int M = S.n_cols;
+		mat h(2, M);
+		for (int m = 0; m < M; m++) {
+			h.col(m) = measurement(line, S.col(m));
+		}
 		return h;
 	}
 
 	mat predict(mat S, double v, double omega, mat R, double delta_t)
 	{
-		mat S_bar;
-		rowvec _aux_rowvec_1;
-		uword M;
-		vec u;
-		M = S.n_cols;
-		u = arma::join_cols(arma::join_cols(arma::join_cols(v*arma::cos(S.row(2)), v*arma::sin(S.row(2))), omega*arma::ones<mat>(1, M)), arma::zeros<mat>(1, M))*delta_t;
-		double __aux_rowvec_1[] = { 0, 0, 0 };
-		_aux_rowvec_1 = rowvec(__aux_rowvec_1, 3, false);
-		S_bar = S + u + {arma::trans(mvnrnd(_aux_rowvec_1, R, M)), arma::zeros<umat>(1, M)};
+		int M = S.n_cols;
+		double kv = R(0, 0); double kw = R(1, 1); double kd = R(2, 2);
+		default_random_engine gen;
+		normal_distribution<double> normal_kv(0, (v*delta_t*kv)*(v*delta_t*kv) + 1e-9);
+		normal_distribution<double> normal_kw(0, (omega*delta_t*kw)*(omega*delta_t*kw) + 1e-9);
+		normal_distribution<double> normal_kd(0, (v*delta_t*kd)*(v*delta_t*kd) + 1e-9);
+
+		mat dS(4, M);
+		for (int m = 0; m < M; m++) {
+			dS.col(m) = vec({ cos(S(2, m))*normal_kd(gen), sin(S(2, m))*normal_kd(gen), normal_kv(gen) + normal_kw(gen), 0 });
+		}
+		mat u = join_cols(join_cols(join_cols(v*arma::cos(S.row(2)), v*arma::sin(S.row(2))), omega*ones<mat>(1, M)), zeros<mat>(1, M))*delta_t;
+		mat S_bar = S + u + dS;
 		return S_bar;
 	}
 
@@ -122,28 +130,14 @@ class ParticleFilter {
 		return S;
 	}
 
-	void mcl(mat S, mat R, mat Q, mat z, rowvec known_associations, double v, double omega, mat W, double Lambda_psi, rowvec Map_IDS, double delta_t, int t, mat& S, double& outliers)
+	void mcl(mat R, mat Q, mat z, double v, double omega, mat W, double Lambda_psi, rowvec Map_IDS, double delta_t, int t, mat& S, double& outliers)
 	{
 		cube Psi;
-		int RESAMPLE_MODE, USE_KNOWN_ASSOCIATIONS, i;
-		mat S_bar;
 		rowvec outlier;
-		uvec map_ids;
-		S_bar = predict(S, v, omega, R, delta_t);
-			associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
+		mat S_bar = predict(S, v, omega, R, delta_t);
+		associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
 		outliers = double(arma::as_scalar(arma::sum(outlier)));
-		if (outliers)
-		{
-		}
 		S_bar = weight(S_bar, Psi, outlier);
-		RESAMPLE_MODE = 2;
-		if (0 == RESAMPLE_MODE)
-		{
-			S = S_bar;
-		}
-		else if (2 == RESAMPLE_MODE)
-		{
-			S = systematic_resample(S_bar);
-		}
+		S = systematic_resample(S_bar);
 	}
 };
