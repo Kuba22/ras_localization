@@ -7,6 +7,12 @@
 using namespace arma;
 using namespace std;
 
+template<typename T>
+T mod(T a, double n)
+{
+	return a - floor(a / n)*n;
+}
+
 mat readLines(string map_file)
 {
 	mat lines(1, 4);
@@ -78,5 +84,5 @@ vec measurement(vec line, vec robot)
 	double rho = sqrt((r[0] / r[2] - robot[0])*(r[0] / r[2] - robot[0]) + (r[1] / r[2] - robot[1])*(r[1] / r[2] - robot[1]));
 	double phi = atan2(r[1] / r[2] - robot[1], r[0] / r[2] - robot[0]);
 	double theta = phi - robot[2];
-	return vec({ theta, rho });
+	return vec({ rho, theta });
 }
