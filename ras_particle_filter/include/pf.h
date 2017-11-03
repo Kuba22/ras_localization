@@ -58,7 +58,7 @@ public:
 	void associate(mat S_bar, mat z, mat W, double Lambda_psi, mat Q, rowvec& outlier, cube& Psi)
 	{
 		int n = z.n_cols;
-		int N = W.n_cols;
+		int N = W.n_rows;
 		int M = S_bar.n_cols;
 		cube z_m(2, M, N);
 		double psi;
@@ -73,11 +73,11 @@ public:
 		{
 			z_hat.slice(k) = observation_model(S_bar, W, k);
 		}
-		for (int i = 1; i <= n; i++)
+		for (int i = 0; i < n; i++)
 		{
 			z_m.each_slice() = repmat(z.col(i), 1, M);
 
-			for (int k = 1; k <= N; k++)
+			for (int k = 0; k < N; k++)
 			{
 				for (int m = 0; m < M; m++)
 				{
@@ -89,7 +89,7 @@ public:
 			}
 			double psiSum = 0;
 			uvec c = index_min(D, 1);
-			for (int m = 1; m <= M; m++)
+			for (int m = 0; m < M; m++)
 			{
 				psi = gaussian_multiplier*std::exp(-0.5*D(m, c(m)));
 				Psi(0, i, m) = psi;
