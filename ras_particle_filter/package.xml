@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package>
+  <name>ras_particle_filter</name>
+  <version>0.0.0</version>
+  <description>The ras_particle_filter package</description>
+
+  <maintainer email="ras@todo.todo">ras</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <run_depend>roscpp</run_depend>
+
+  <export>
+  </export>
+</package>

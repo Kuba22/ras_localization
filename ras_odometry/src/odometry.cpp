@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <phidgets/motor_encoder.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <tf/transform_broadcaster.h>
 
 const double r = 0.036;
@@ -36,6 +37,7 @@ int main(int argc, char *argv[])
     ros::Subscriber encoder_right_sub = nh.subscribe("/motorcontrol/encoder_right", 100, &EncoderRightCallback);
 
     ros::Publisher pose_pub = nh.advertise<geometry_msgs::PoseStamped>("localization/odometry_pose", 1);
+	ros::Publisher twist_pub = nh.advertise<geometry_msgs::Twist>("localization/odometry_twist", 1);
 
     // message declarations for rviz
     geometry_msgs::TransformStamped odom_trans;
@@ -63,9 +65,12 @@ int main(int argc, char *argv[])
         pose_stamped.pose.orientation.z = sin(theta*0.5);
         pose_stamped.pose.orientation.w = cos(theta*0.5);
 
-
-
         pose_pub.publish(pose_stamped);
+
+		geometry_msgs::Twist twist;
+		twist.linear.x = v;
+		twist.angular.z = w;
+		twist_pub.publish(twist);
 
         // update transform
         // (moving in a circle with radius=2)
