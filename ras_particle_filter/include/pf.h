@@ -57,46 +57,45 @@ public:
 
 	void associate(mat S_bar, mat z, mat W, double Lambda_psi, mat Q, rowvec& outlier, cube& Psi)
 	{
-		int M, N, c, i, k, m, n, psiSum;
-		cube z_hat;
+		int n = z.n_cols;
+		int N = W.n_cols;
+		int M = S_bar.n_cols;
 		cube z_m(2, M, N);
-		double gaussian_multiplier, psi;
-		mat D, Q_i;
-		n = z.n_cols;
-		N = W.n_cols;
-		M = S_bar.n_cols;
+		double psi;
 		Psi = arma::zeros<cube>(1, n, M);
 		outlier = arma::zeros<rowvec>(n);
-		D = arma::zeros<mat>(M, N);
-		cube v[2];
-		v[0] = arma::zeros<cube>(n, M, N);
-		v[1] = arma::zeros<cube>(n, M, N);
-		z_hat = arma::zeros<cube>(2, M, N);
-		gaussian_multiplier = (2 * datum::pi*sqrt(det(Q))) - 1;
-		Q_i = Q - 1;
-		for (k = 1; k <= N; k++)
+		mat D = arma::zeros<mat>(M, N);
+		cube v(2, n, M);
+		cube z_hat = arma::zeros<cube>(2, M, N);
+		double gaussian_multiplier = 1 / (2 * datum::pi*sqrt(det(Q)));
+		mat Q_i = Q.i();
+		for (int k = 0; k < N; k++)
 		{
-			//z_hat(span(0, z_hat.n_rows - 1), span(0, z_hat.n_cols - 1), k - 1) = observation_model(S_bar, W, k);
-			z_hat.slice(k - 1) = observation_model(S_bar, W, k);
+			z_hat.slice(k) = observation_model(S_bar, W, k);
 		}
-		for (i = 1; i <= n; i++)
+		for (int i = 1; i <= n; i++)
 		{
-			z_m.each_slice() = repmat(z.col(i - 1), 1, M);
-			v(m2cpp::span<uvec>(0, v.n_rows - 1), i, m2cpp::span<uvec>(0, v.n_slices - 1), span::all) = double(arma::as_scalar(z_m(span(0, z_m.n_rows - 1), span(0, z_m.n_cols - 1), span(0, z_m.n_slices - 1)) - z_hat(span(0, z_hat.n_rows - 1), span(0, z_hat.n_cols - 1), span(0, z_hat.n_slices - 1))));
-			v(2, i, m2cpp::span<uvec>(0, v.n_slices - 1), span::all) = v(2, i, m2cpp::span<uvec>(0, v.n_slices - 1), span::all) + datum::pi % 2 * datum::pi - datum::pi;
-			for (k = 1; k <= N; k++)
+			z_m.each_slice() = repmat(z.col(i), 1, M);
+
+			for (int k = 1; k <= N; k++)
 			{
-				D.col(k - 1) = arma::strans(arma::sum(arma:vectorize(reshape(v(m2cpp::span<uvec>(0, v.n_rows - 1), i, m2cpp::span<uvec>(0, v.n_slices - 1), k), { 2, M }) % (Q_i*reshape(v(m2cpp::span<uvec>(0, v.n_rows - 1), i, m2cpp::span<uvec>(0, v.n_slices - 1), k), { 2, M }))), 0));
+				for (int m = 0; m < M; m++)
+				{
+					vec v = z.col(i) - z_hat.slice(k).col(m);
+					v(1) = mod(v(1) + datum::pi, 2 * datum::pi) - datum::pi;
+
+					D(m, k) = as_scalar(v.t()*Q_i*v);
+				}
 			}
-			psiSum = 0;
-			D.min(c);
-			for (m = 1; m <= M; m++)
+			double psiSum = 0;
+			uvec c = index_min(D, 1);
+			for (int m = 1; m <= M; m++)
 			{
-				psi = gaussian_multiplier*std::exp(-0.5*D(m - 1, c(m) - 1));
-				Psi(0, i - 1, m - 1) = psi;
+				psi = gaussian_multiplier*std::exp(-0.5*D(m, c(m)));
+				Psi(0, i, m) = psi;
 				psiSum = psiSum + psi;
 			}
-			outlier(i - 1) = psiSum*1.0 / M <= Lambda_psi;
+			outlier(i) = psiSum*1.0 / M <= Lambda_psi;
 		}
 	}
 
