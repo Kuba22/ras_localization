@@ -3,13 +3,19 @@ project(ras_particle_filter)
 
 add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED COMPONENTS roscpp )
+find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs message_generation ras_line_detector)
 find_package(Armadillo REQUIRED)
+
+add_message_files(
+  FILES
+  Particles.msg
+)
+
+generate_messages(DEPENDENCIES geometry_msgs)
 
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES ras_odometery
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS roscpp geometry_msgs message_runtime ras_line_detector
 #  DEPENDS system_lib
 )
 
@@ -19,17 +25,7 @@ include_directories(
  ${ARMADILLO_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/ras_odometery.cpp
-# )
-
-
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 add_executable(particle_filter src/particle_filter.cpp)
-
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(particle_filter
   ${catkin_LIBRARIES}
@@ -38,42 +34,4 @@ target_link_libraries(particle_filter
   ${ARMADILLO_LIBRARIES}
 )
 
-
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark executables and/or libraries for installation
-# install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
-
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_ras_odometery.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+add_dependencies(particle_filter ras_particle_filter_generate_messages_cpp)
