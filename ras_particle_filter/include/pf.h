@@ -136,7 +136,7 @@ public:
 		mat S_bar = predict(S, v, omega, R, delta_t);
 		associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
 		outliers = double(arma::as_scalar(arma::sum(outlier)));
-		if (outliers == 0) {
+		if (outliers == outlier.n_elem) {
 			return;
 		}
 		S_bar = weight(S_bar, Psi, outlier);
