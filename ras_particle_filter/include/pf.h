@@ -6,7 +6,7 @@ using namespace arma;
 
 class ParticleFilter {
 public:
-	void init(vec bound, double part_bound, vec start_pose, mat& S, mat& R, mat& Q, int M)
+	void init(vec bound, double part_bound, vec start_pose, mat& S, int M)
 	{
 		if (!start_pose.is_empty())
 		{
@@ -16,10 +16,6 @@ public:
 		{
 			S = arma::join_cols(arma::join_cols(arma::join_cols(arma::randu<mat>(1, M)*(bound(1) - bound(0) + 2 * part_bound) + bound(0) - part_bound, arma::randu<mat>(1, M)*(bound(3) - bound(2) + 2 * part_bound) + bound(2) - part_bound), arma::randu<mat>(1, M) * 2 * datum::pi - datum::pi), 1.0 / M*arma::ones<mat>(1, M));
 		}
-		vec R_diag = { 1e-2, 1e-2, 1e-2 };
-		vec Q_diag = { 1e-1, 1e-1 };
-		R = diagmat(R_diag);
-		Q = diagmat(Q_diag);
 	}
 
 	mat observation_model(mat S, mat W, int j)
