@@ -16,30 +16,55 @@ public:
     geometry_msgs::Twist last_twist;
     ras_line_detector::LineSegmentList line_segments;
 
-    void TwistCallback(const geometry_msgs::Twist::ConstPtr& msg){
+    double Lambda_psi;
+    std::vector<double> start_pose ;
+    std::vector<double> bound = {0.0, 1.0, 0.0, 1.0};
+    double part_bound;
+    int M;
+    int update_freq;
+
+    mat S, R, Q;
+
+    void TwistCallback(const geometry_msgs::Twist::ConstPtr& msg)
+    {
         last_twist = *msg;
-        // take into account the time intervals between the messages
     }
 
-    void LinesCallback(const ras_line_detector::LineSegmentList::ConstPtr& msg){
+    void LinesCallback(const ras_line_detector::LineSegmentList::ConstPtr& msg)
+    {
         line_segments = *msg;
     }
 
     ParticleFilterNode()
     {
         lines_sub = nh.subscribe("/lines", 1, &ParticleFilterNode::LinesCallback, this);
-        twist_sub = nh.subscribe("/localization/odometry_twist", 20, &ParticleFilterNode::TwistCallback, this);
+        twist_sub = nh.subscribe("/localization/odometry_twist", 1, &ParticleFilterNode::TwistCallback, this);
         particles_pub = nh.advertise<ras_particle_filter::Particles>("/particles", 1);
+        LoadParams();
+        InitializePf();
+    }
 
+   void LoadParams()
+    {
+        nh.param("update_freq", update_freq, 5);
+        nh.param("Lambda_psi", Lambda_psi, 0.0001);
+        nh.getParam("start_pose", start_pose);
+        nh.getParam("bound", bound);
+        nh.param("part_bound", part_bound, 20.0);
+        nh.param("M", M, 1000);
+    }
+
+    void InitializePf()
+    {
+        pf.init(vec(bound), part_bound, vec(start_pose), S, R, Q, M);
     }
 };
 
 int main(int argc, char *argv[])
 {
 	ros::init(argc, argv, "particle_filter");
-	ROS_INFO("Particle Filter Node");
-
-	ParticleFilterNode node;
+        ROS_INFO("Particle Filter Node");
+        ParticleFilterNode node;
 
 	arma::mat m(2,2);
 	m(0,0) = 1;

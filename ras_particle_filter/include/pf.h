@@ -6,24 +6,20 @@ using namespace arma;
 
 class ParticleFilter {
 public:
-	void init(vec bound, vec start_pose, mat& S, mat& R, mat& Q, double& Lambda_psi)
+	void init(vec bound, double part_bound, vec start_pose, mat& S, mat& R, mat& Q, int M)
 	{
-		int M, part_bound;
-		M = 1000;
-		part_bound = 20;
 		if (!start_pose.is_empty())
 		{
 			S = join_cols(repmat(start_pose, 1, M), (1.0 / M)*arma::ones<mat>(1, M));
 		}
 		else
 		{
-			S = arma::join_cols(arma::join_cols(arma::join_cols(arma::randu<mat>(1, M)*(bound(1) - bound(0) + 2 * part_bound) + bound(0) - part_bound, arma::randu<mat>(1, M)*(bound(3) - bound(2) + 2 * part_bound) + bound(2) - part_bound), arma::randu<mat>(1, M) * 2 * datum::pi - datum::pi), 1 * 1.0 / M*arma::ones<mat>(1, M));
+			S = arma::join_cols(arma::join_cols(arma::join_cols(arma::randu<mat>(1, M)*(bound(1) - bound(0) + 2 * part_bound) + bound(0) - part_bound, arma::randu<mat>(1, M)*(bound(3) - bound(2) + 2 * part_bound) + bound(2) - part_bound), arma::randu<mat>(1, M) * 2 * datum::pi - datum::pi), 1.0 / M*arma::ones<mat>(1, M));
 		}
 		vec R_diag = { 1e-2, 1e-2, 1e-2 };
 		vec Q_diag = { 1e-1, 1e-1 };
 		R = diagmat(R_diag);
 		Q = diagmat(Q_diag);
-		Lambda_psi = 0.0001;
 	}
 
 	mat observation_model(mat S, mat W, int j)
