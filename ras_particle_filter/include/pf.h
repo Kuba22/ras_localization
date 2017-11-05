@@ -121,7 +121,7 @@ public:
 		return S;
 	}
 
-	void mcl(mat R, mat Q, mat z, double v, double omega, mat W, double Lambda_psi, rowvec Map_IDS, double delta_t, int t, mat& S, double& outliers)
+	void mcl(mat R, mat Q, mat z, double v, double omega, mat W, double Lambda_psi, double delta_t, int t, mat& S, double& outliers)
 	{
 		cube Psi;
 		rowvec outlier;
@@ -129,6 +129,7 @@ public:
 		associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
 		outliers = double(arma::as_scalar(arma::sum(outlier)));
 		if (outliers == outlier.n_elem) {
+			S = S_bar;
 			return;
 		}
 		S_bar = weight(S_bar, Psi, outlier);

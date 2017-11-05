@@ -10,14 +10,14 @@ class ParticleFilterNode
 public:
     ros::NodeHandle nh;
     ros::Subscriber twist_sub, lines_sub;
-    ros::Publisher particles_pub;
+    ros::Publisher particles_pub, pose_estimate_pub;
     ParticleFilter pf;
 
     geometry_msgs::Twist twist;
     ras_line_detector::LineSegmentList line_segments;
 
     double Lambda_psi;
-    std::vector<double> start_pose ;
+    std::vector<double> start_pose;
     std::vector<double> bound = {0.0, 1.0, 0.0, 1.0};
     std::vector<double> R_vec = {0.01, 0.01, 0.01};
     std::vector<double> Q_vec = {0.01, 0.01};
@@ -25,8 +25,11 @@ public:
     int M;
     int update_freq, predict_freq;
     int npp;
+    string map_file;
 
-    mat S, R, Q;
+    mat S, R, Q, S_bar, z, W;
+    cube Psi;
+    rowvec outlier;
 
     void TwistCallback(const geometry_msgs::Twist::ConstPtr& msg)
     {
@@ -36,6 +39,14 @@ public:
     void LinesCallback(const ras_line_detector::LineSegmentList::ConstPtr& msg)
     {
         line_segments = *msg;
+        int n;
+        if(n = line_segments.line_segments.size() > 0){
+            z = mat(2, n);
+            for(int i = 0; i < n; i++){
+                z.col(n) = vec({line_segments.line_segments[n].radius,
+                               line_segments.line_segments[n].angle});
+            }
+        }
     }
 
     ParticleFilterNode()
@@ -43,6 +54,7 @@ public:
         lines_sub = nh.subscribe("/lines", 1, &ParticleFilterNode::LinesCallback, this);
         twist_sub = nh.subscribe("/localization/odometry_twist", 1, &ParticleFilterNode::TwistCallback, this);
         particles_pub = nh.advertise<ras_particle_filter::Particles>("/particles", 1);
+        pose_estimate_pub = nh.advertise<geometry_msgs::Pose2D>("/localization/pose", 1);
         LoadParams();
         InitializePf();
     }
@@ -60,6 +72,7 @@ public:
         nh.getParam("Q", Q_vec);
         nh.param("n_particles_to_pub", npp, 20);
         npp = npp > M ? M : npp;
+        nh.getParam("map_file", map_file);
     }
 
     void InitializePf()
@@ -80,6 +93,27 @@ public:
             particles_msg.poses.push_back(pose);
         }
         particles_pub.publish(particles_msg);
+    }
+
+    void MCL(long& ct, double& t, int freq_ratio)
+    {
+        double dt = ros::Time::now().toSec() - t;
+        double v = twist.linear.x;
+        double w = twist.angular.z;
+        S_bar = pf.predict(S, v, w, R, dt);
+        t = ros::Time::now().toSec();
+        if(ct++%freq_ratio==0)
+        {
+            W = readLines(map_file);
+            pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
+            int outliers = (int)double(arma::as_scalar(arma::sum(outlier)));
+            if (outliers == outlier.n_elem) {
+                S = S_bar;
+                return;
+            }
+            S_bar = pf.weight(S_bar, Psi, outlier);
+            S = pf.resample(S_bar);
+        }
     }
 };
 
@@ -107,13 +141,8 @@ int main(int argc, char *argv[])
         {
             ros::spinOnce();
 
-            double dt = ros::Time::now().toSec() - t;
-            pfn.pf.predict(pfn.S, pfn.twist.linear.x, pfn.twist.angular.z, pfn.R, dt);
-            t = ros::Time::now().toSec();
-            if(ct++%freq_ratio==0)
-            {
-                //update
-            }
+            pfn.MCL(ct, t, freq_ratio);
+
             pfn.PublishParticles();
 
             rate.sleep();
