@@ -2,6 +2,8 @@
 #include <armadillo>
 #include "PfHelper.h"
 
+#include <iostream>
+
 using namespace arma;
 
 class ParticleFilter {
@@ -96,7 +98,7 @@ public:
 		int M = S_bar.n_cols;
 
 		mat psi = reshape(Psi, n, M, 1);
-		rowvec p = prod(psi.rows(find(outlier == true)), 1).t();
+		rowvec p = prod(psi.rows(find(outlier == false)), 0);
 		S_bar.row(3) = p / sum(p);
 		return S_bar;
 	}

@@ -107,7 +107,6 @@ public:
         if(ct++%freq_ratio==0)
         {
             W = readLines(map_file);
-            ROS_INFO("read lines ok. %d", W.n_rows);
             pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
             int outliers = (int)double(arma::as_scalar(arma::sum(outlier)));
             if (outliers == outlier.n_elem) {
