@@ -5,6 +5,8 @@
 #include <ras_line_detector/LineSegmentList.h>
 #include <ras_particle_filter/Particles.h>
 
+#include <iostream>
+
 class ParticleFilterNode
 {
 public:
@@ -43,7 +45,7 @@ public:
         if(n = line_segments.line_segments.size() > 0){
             z = mat(2, n);
             for(int i = 0; i < n; i++){
-                z.col(n) = vec({line_segments.line_segments[n].radius,
+                z.col(i) = vec({line_segments.line_segments[n].radius,
                                line_segments.line_segments[n].angle});
             }
         }
@@ -105,6 +107,7 @@ public:
         if(ct++%freq_ratio==0)
         {
             W = readLines(map_file);
+            ROS_INFO("read lines ok. %d", W.n_rows);
             pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
             int outliers = (int)double(arma::as_scalar(arma::sum(outlier)));
             if (outliers == outlier.n_elem) {
@@ -113,6 +116,9 @@ public:
             }
             S_bar = pf.weight(S_bar, Psi, outlier);
             S = pf.resample(S_bar);
+        }
+        else{
+            S = S_bar;
         }
     }
 };

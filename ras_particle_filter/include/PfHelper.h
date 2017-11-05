@@ -20,6 +20,7 @@ mat readLines(string map_file)
 	ifstream map_fs;
 	map_fs.open(map_file.c_str());
 	if (!map_fs.is_open()) {
+		throw std::runtime_error("map file not open");
 	}
 
 	string line;

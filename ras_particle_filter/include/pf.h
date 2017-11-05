@@ -68,7 +68,6 @@ public:
 		for (int i = 0; i < n; i++)
 		{
 			z_m.each_slice() = repmat(z.col(i), 1, M);
-
 			for (int k = 0; k < N; k++)
 			{
 				for (int m = 0; m < M; m++)
@@ -119,20 +118,5 @@ public:
 		}
 		S.row(3) = 1.0 / M * ones(1, M);
 		return S;
-	}
-
-	void mcl(mat R, mat Q, mat z, double v, double omega, mat W, double Lambda_psi, double delta_t, int t, mat& S, double& outliers)
-	{
-		cube Psi;
-		rowvec outlier;
-		mat S_bar = predict(S, v, omega, R, delta_t);
-		associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
-		outliers = double(arma::as_scalar(arma::sum(outlier)));
-		if (outliers == outlier.n_elem) {
-			S = S_bar;
-			return;
-		}
-		S_bar = weight(S_bar, Psi, outlier);
-		S = resample(S_bar);
 	}
 };
