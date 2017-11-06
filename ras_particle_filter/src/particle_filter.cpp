@@ -3,6 +3,7 @@
 #include "pf.h"
 #include <geometry_msgs/Twist.h>
 #include <ras_line_detector/LineSegmentList.h>
+#include <ras_line_detector/LineSegment.h>
 #include <ras_particle_filter/Particles.h>
 
 #include <iostream>
@@ -42,7 +43,7 @@ public:
     {
         line_segments = *msg;
         int n;
-        if(n = line_segments.line_segments.size() > 0){
+        if((n = line_segments.line_segments.size()) > 0){
             z = mat(2, n);
             for(int i = 0; i < n; i++){
                 z.col(i) = vec({line_segments.line_segments[n].radius,
