@@ -63,7 +63,7 @@ class LineDetector:
 		N = 5
 		noinf_Nlonger = np.append(noinf, noinf[:N])
 		noinf_Nlonger = np.insert(noinf_Nlonger, 0, noinf[-N:])
-		gaussian_smoothed = np.convolve(general_gaussian(2*N+1, p=1, sig=16), noinf_Nlonger, mode='valid')
+		gaussian_smoothed = np.convolve(general_gaussian(2*N+1, p=1, sig=20), noinf_Nlonger, mode='valid')
 		grad = np.gradient(noinf)
 		incontinuities = np.where(np.absolute(grad) > 0.1)
 		minima = getMin(gaussian_smoothed)

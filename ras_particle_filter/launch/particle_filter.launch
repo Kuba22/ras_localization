@@ -13,7 +13,7 @@
 	<rosparam param="Q">[0.03, 0.03]</rosparam>
 	<param name="part_bound" type="double" value="0.0" />
 	<rosparam param="bound">[0.0, 1.0, 0.0, 1.0]</rosparam>
-	<param name="n_particles_to_pub" type="int" value="1" />
+	<param name="n_particles_to_pub" type="int" value="5" />
 
 	<!-- set this to the right map file -->
 	<param name="map_file" type="string" value="/home/ras/catkin_ws/src/ras_maze/ras_maze_map/maps/lab_maze_2017.txt" />
