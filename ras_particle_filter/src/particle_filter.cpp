@@ -4,7 +4,8 @@
 #include <geometry_msgs/Twist.h>
 #include <ras_line_detector/LineSegmentList.h>
 #include <ras_line_detector/LineSegment.h>
-#include <ras_particle_filter/Particles.h>
+#include <geometry_msgs/PoseArray.h>
+#include <geometry_msgs/PoseStamped.h>
 
 #include <iostream>
 
@@ -57,8 +58,8 @@ public:
     {
         lines_sub = nh.subscribe("/lines", 1, &ParticleFilterNode::LinesCallback, this);
         twist_sub = nh.subscribe("/localization/odometry_twist", 1, &ParticleFilterNode::TwistCallback, this);
-        particles_pub = nh.advertise<ras_particle_filter::Particles>("/particles", 1);
-        pose_estimate_pub = nh.advertise<geometry_msgs::Pose2D>("/localization/pose", 1);
+        particles_pub = nh.advertise<geometry_msgs::PoseArray>("/particles", 1);
+        pose_estimate_pub = nh.advertise<geometry_msgs::PoseStamped>("/localization/pose", 1);
         LoadParams();
         InitializePf();
     }
@@ -89,12 +90,14 @@ public:
 
     void PublishParticles()
     {
-        ras_particle_filter::Particles particles_msg;
+        geometry_msgs::PoseArray particles_msg;
+        particles_msg.header.frame_id = "odom";
         for(int i = 0; i < npp; i++){
-            geometry_msgs::Pose2D pose;
-            pose.x = S(0, i);
-            pose.y = S(1, i);
-            pose.theta = S(2, i);
+            geometry_msgs::Pose pose;
+            pose.position.x = S(0, i);
+            pose.position.y = S(1, i);
+            pose.orientation.z = sin(0.5*S(2, i));
+            pose.orientation.w = cos(0.5*S(2, i));
             particles_msg.poses.push_back(pose);
         }
         particles_pub.publish(particles_msg);
@@ -104,10 +107,12 @@ public:
     {
         mat s = S.rows(0, 2).cols(0, npp-1);
         vec m = mean(s, 1);
-        geometry_msgs::Pose2D pose;
-        pose.x = m(0);
-        pose.y = m(1);
-        pose.theta = m(2);
+        geometry_msgs::PoseStamped pose;
+        pose.header.frame_id = "odom";
+        pose.pose.position.x = m(0);
+        pose.pose.position.y = m(1);
+        pose.pose.orientation.z = sin(0.5*m(2));
+        pose.pose.orientation.w = cos(0.5*m(2));
         pose_estimate_pub.publish(pose);
     }
 
