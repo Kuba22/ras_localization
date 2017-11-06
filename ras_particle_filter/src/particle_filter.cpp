@@ -98,6 +98,17 @@ public:
         particles_pub.publish(particles_msg);
     }
 
+    void PublishPoseEstimate()
+    {
+        mat s = S.rows(0, 2).cols(0, npp-1);
+        vec m = mean(s, 1);
+        geometry_msgs::Pose2D pose;
+        pose.x = m(0);
+        pose.y = m(1);
+        pose.theta = m(2);
+        pose_estimate_pub.publish(pose);
+    }
+
     void MCL(long& ct, double& t, int freq_ratio)
     {
         double dt = ros::Time::now().toSec() - t;
@@ -150,6 +161,7 @@ int main(int argc, char *argv[])
             pfn.MCL(ct, t, freq_ratio);
 
             pfn.PublishParticles();
+            pfn.PublishPoseEstimate();
 
             rate.sleep();
         }
