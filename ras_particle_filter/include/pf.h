@@ -14,13 +14,14 @@ public:
                 {
                         default_random_engine gen;
                         normal_distribution<double> normal(0, particle_spread + 1e-9);
+						std::uniform_real_distribution<double> unif(0.0, datum::pi);
                         S = mat(4, M);
                         double iM = 1.0/M;
                         for(int m=0; m<M; m++)
                         {
                             S(0, m) = start_pose(0) + normal(gen);
                             S(1, m) = start_pose(1) + normal(gen);
-                            S(2, m) = start_pose(2);
+                            S(2, m) = unif(gen);
                             S(3, m) = iM;
                         }
                 }
