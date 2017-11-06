@@ -8,10 +8,24 @@ using namespace arma;
 
 class ParticleFilter {
 public:
-	void init(vec bound, double part_bound, vec start_pose, mat& S, int M)
+        void init(vec bound, double part_bound, vec start_pose, mat& S, int M, double particle_spread)
 	{
+                if (!start_pose.is_empty() && particle_spread>0)
+                {
+                        default_random_engine gen;
+                        normal_distribution<double> normal(0, particle_spread + 1e-9);
+                        S = mat(4, M);
+                        double iM = 1.0/M;
+                        for(int m=0; m<M; m++)
+                        {
+                            S(0, m) = start_pose(0) + normal(gen);
+                            S(1, m) = start_pose(1) + normal(gen);
+                            S(2, m) = start_pose(2);
+                            S(3, m) = iM;
+                        }
+                }
 		if (!start_pose.is_empty())
-		{
+                {
 			S = join_cols(repmat(start_pose, 1, M), (1.0 / M)*arma::ones<mat>(1, M));
 		}
 		else

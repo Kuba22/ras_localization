@@ -29,6 +29,7 @@ public:
     int update_freq, predict_freq;
     int npp;
     string map_file;
+    double init_particle_spread;
 
     mat S, R, Q, S_bar, z, W;
     cube Psi;
@@ -76,13 +77,14 @@ public:
         nh.param("n_particles_to_pub", npp, 20);
         npp = npp > M ? M : npp;
         nh.getParam("map_file", map_file);
+        nh.param("init_particle_spread", init_particle_spread, -1.0);
     }
 
     void InitializePf()
     {
         R = diagmat(vec(R_vec));
         Q = diagmat(vec(Q_vec));
-        pf.init(vec(bound), part_bound, vec(start_pose), S, M);
+        pf.init(vec(bound), part_bound, vec(start_pose), S, M, init_particle_spread);
     }
 
     void PublishParticles()

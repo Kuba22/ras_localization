@@ -1,11 +1,10 @@
 <launch>
-	<node name="odometry" type="odometry" pkg="ras_odometry"/>
 	<include file="$(find ras_line_detector)/launch/line_detector.launch"/>
 	<node name="particle_filter" type="particle_filter" pkg="ras_particle_filter" output="screen" />
 
 	<param name="predict_freq" type="int" value="10" />
 	<param name="update_freq" type="int" value="5" />
-	<rosparam param="start_pose">[0.0, 0.0, 0.0]</rosparam>
+	<rosparam param="start_pose">[0.0, 0.0, 1.570796]</rosparam>
 	<param name="Lambda_psi" type="double" value="0.001" />
 	<param name="kp_left" type="double" value="0.3" />
 	<param name="M" type="int" value="1000" />
@@ -14,6 +13,7 @@
 	<param name="part_bound" type="double" value="0.0" />
 	<rosparam param="bound">[0.0, 1.0, 0.0, 1.0]</rosparam>
 	<param name="n_particles_to_pub" type="int" value="5" />
+	<param name="init_particle_spread" type="double" value="0.05" />
 
 	<!-- set this to the right map file -->
 	<param name="map_file" type="string" value="/home/ras/catkin_ws/src/ras_maze/ras_maze_map/maps/lab_maze_2017.txt" />
