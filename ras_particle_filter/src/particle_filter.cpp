@@ -47,7 +47,7 @@ public:
             z = mat(2, n);
             for(int i = 0; i < n; i++){
                 z.col(i) = vec({line_segments.line_segments[n].radius,
-                               line_segments.line_segments[n].angle});
+                               line_segments.line_segments[n].angle*datum::pi/180.0});
             }
         }
     }
