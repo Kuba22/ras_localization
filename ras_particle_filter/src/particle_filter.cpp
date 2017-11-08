@@ -28,13 +28,14 @@ public:
     double part_bound;
     int M;
     int update_freq, predict_freq;
-    int npp;
+    int npp, n_phi;
     string map_file;
     double init_particle_spread;
 
     mat S, R, Q, S_bar, z, W;
     cube Psi;
     rowvec outlier;
+    vec phi;
 
     void TwistCallback(const geometry_msgs::Twist::ConstPtr& msg)
     {
@@ -79,12 +80,17 @@ public:
         npp = npp > M ? M : npp;
         nh.getParam("map_file", map_file);
         nh.param("init_particle_spread", init_particle_spread, -1.0);
+        nh.param("n_phi", n_phi, 10);
     }
 
     void InitializePf()
     {
         R = diagmat(vec(R_vec));
         Q = diagmat(vec(Q_vec));
+        phi = vec(n_phi);
+        for(int i=0; i<n_phi; i++){
+            phi[i] = 2*datum::pi/n_phi*i;
+        }
         pf.init(vec(bound), part_bound, vec(start_pose), S, M, init_particle_spread);
     }
 
@@ -126,7 +132,7 @@ public:
         if(ct++%freq_ratio==0)
         {
             W = readLines(map_file);
-            pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
+            pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi, phi);
             int outliers = (int)double(arma::as_scalar(arma::sum(outlier)));
             if (outliers == outlier.n_elem) {
                 S = S_bar;

@@ -23,11 +23,11 @@ def drawLine(screen, line, p):
 class Drawer:
 	def __init__(self):
 		rospy.init_node("drawer", anonymous = True)
-		self.scan_sub = rospy.Subscriber("/lines", LineSegmentList, self.linesCallback)
-		self.scan_sub = rospy.Subscriber("/localization/odometry_pose", PoseStamped, self.poseCallback)
 		pygame.init()
 		self.screen = pygame.display.set_mode((600,600))
-
+		self.scan_sub = rospy.Subscriber("/lines", LineSegmentList, self.linesCallback)
+		self.scan_sub = rospy.Subscriber("/localization/odometry_pose", PoseStamped, self.poseCallback)
+		
 	def poseCallback(self, msg):
 		self.pose = msg.pose
 		self.x = msg.pose.position.x

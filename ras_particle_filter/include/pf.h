@@ -2,13 +2,11 @@
 #include <armadillo>
 #include "PfHelper.h"
 
-#include <iostream>
-
 using namespace arma;
 
 class ParticleFilter {
 public:
-        void init(vec bound, double part_bound, vec start_pose, mat& S, int M, double particle_spread)
+	void init(vec bound, double part_bound, vec start_pose, mat& S, int M, double particle_spread)
 	{
                 if (!start_pose.is_empty() && particle_spread>0)
                 {
@@ -35,13 +33,12 @@ public:
 		}
 	}
 
-	mat observation_model(mat S, mat W, int j)
+	mat observation_model(mat S, mat W, double phi)
 	{
-		vec line = W.row(j).t();
 		int M = S.n_cols;
 		mat h(2, M);
 		for (int m = 0; m < M; m++) {
-			h.col(m) = measurement(line, S.col(m));
+			h.col(m) = vec({ getRange(W, S.col(m), phi), phi });
 		}
 		return h;
 	}
@@ -64,7 +61,7 @@ public:
 		return S_bar;
 	}
 
-	void associate(mat S_bar, mat z, mat W, double Lambda_psi, mat Q, rowvec& outlier, cube& Psi)
+	void associate(mat S_bar, mat z, mat W, double Lambda_psi, mat Q, rowvec& outlier, cube& Psi, vec phi)
 	{
 		int n = z.n_cols;
 		int N = W.n_rows;
@@ -80,11 +77,12 @@ public:
 		mat Q_i = Q.i();
 		for (int k = 0; k < N; k++)
 		{
-			z_hat.slice(k) = observation_model(S_bar, W, k);
+			z_hat.slice(k) = observation_model(S_bar, W, phi(k));
 		}
 		for (int i = 0; i < n; i++)
 		{
 			z_m.each_slice() = repmat(z.col(i), 1, M);
+
 			for (int k = 0; k < N; k++)
 			{
 				for (int m = 0; m < M; m++)
