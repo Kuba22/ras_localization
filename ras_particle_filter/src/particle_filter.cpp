@@ -2,23 +2,24 @@
 #include <armadillo>
 #include "pf.h"
 #include <geometry_msgs/Twist.h>
-#include <ras_line_detector/LineSegmentList.h>
-#include <ras_line_detector/LineSegment.h>
+#include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseStamped.h>
 
 #include <iostream>
 
+bool received_scan = false;
+
 class ParticleFilterNode
 {
 public:
     ros::NodeHandle nh;
-    ros::Subscriber twist_sub, lines_sub;
+    ros::Subscriber twist_sub, scan_sub;
     ros::Publisher particles_pub, pose_estimate_pub;
     ParticleFilter pf;
 
     geometry_msgs::Twist twist;
-    ras_line_detector::LineSegmentList line_segments;
+    sensor_msgs::LaserScan scan;
 
     double Lambda_psi;
     std::vector<double> start_pose;
@@ -28,7 +29,7 @@ public:
     double part_bound;
     int M;
     int update_freq, predict_freq;
-    int npp;
+    int npp, n_phi;
     string map_file;
     double init_particle_spread;
 
@@ -41,22 +42,15 @@ public:
         twist = *msg;
     }
 
-    void LinesCallback(const ras_line_detector::LineSegmentList::ConstPtr& msg)
+    void ScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
     {
-        line_segments = *msg;
-        int n;
-        if((n = line_segments.line_segments.size()) > 0){
-            z = mat(2, n);
-            for(int i = 0; i < n; i++){
-                z.col(i) = vec({line_segments.line_segments[n].radius,
-                               line_segments.line_segments[n].angle*datum::pi/180.0});
-            }
-        }
+        scan = *msg;
+        received_scan = true;
     }
 
     ParticleFilterNode()
     {
-        lines_sub = nh.subscribe("/lines", 1, &ParticleFilterNode::LinesCallback, this);
+        scan_sub = nh.subscribe("/scan", 1, &ParticleFilterNode::ScanCallback, this);
         twist_sub = nh.subscribe("/localization/odometry_twist", 1, &ParticleFilterNode::TwistCallback, this);
         particles_pub = nh.advertise<geometry_msgs::PoseArray>("/particles", 1);
         pose_estimate_pub = nh.advertise<geometry_msgs::PoseStamped>("/localization/pose", 1);
@@ -79,13 +73,14 @@ public:
         npp = npp > M ? M : npp;
         nh.getParam("map_file", map_file);
         nh.param("init_particle_spread", init_particle_spread, -1.0);
+        nh.param("n_phi", n_phi, 10);
     }
 
     void InitializePf()
     {
         R = diagmat(vec(R_vec));
         Q = diagmat(vec(Q_vec));
-        pf.init(vec(bound), part_bound, vec(start_pose), S, M, init_particle_spread);
+        pf.init(vec(bound), part_bound, vec(start_pose), S, R, Q, M, init_particle_spread);
     }
 
     void PublishParticles()
@@ -109,6 +104,7 @@ public:
         vec m = mean(s, 1);
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = "odom";
+        pose.header.stamp = ros::Time::now();
         pose.pose.position.x = m(0);
         pose.pose.position.y = m(1);
         pose.pose.orientation.z = sin(0.5*m(2));
@@ -116,18 +112,37 @@ public:
         pose_estimate_pub.publish(pose);
     }
 
+    void ObservationsFromScan(){
+        int ntheta = std::round((scan.angle_max - scan.angle_min)/scan.angle_increment+1);
+        int d = ntheta/n_phi;
+        z = mat(2, 1);
+        for(int i=0; i<n_phi; i++){
+            if(std::isinf(scan.ranges[i*d]))
+                continue;
+            z = join_rows(z, vec({scan.ranges[i*d], i*d*scan.angle_increment}));
+        }
+        z.shed_col(0);
+    }
+
     void MCL(long& ct, double& t, int freq_ratio)
     {
         double dt = ros::Time::now().toSec() - t;
         double v = twist.linear.x;
         double w = twist.angular.z;
-        S_bar = pf.predict(S, v, w, R, dt);
+        S_bar = pf.predict(S, v, w, dt);
         t = ros::Time::now().toSec();
         if(ct++%freq_ratio==0)
         {
             W = readLines(map_file);
+            if(!received_scan){
+                ROS_WARN("No scan messages received yet.");
+                S = S_bar;
+                return;
+            }
+            ObservationsFromScan();
             pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
             int outliers = (int)double(arma::as_scalar(arma::sum(outlier)));
+            //std::cout<<"outliers "<<outliers<<" of "<<outlier.n_elem<<std::endl;
             if (outliers == outlier.n_elem) {
                 S = S_bar;
                 return;
@@ -147,20 +162,10 @@ int main(int argc, char *argv[])
         ROS_INFO("Particle Filter Node");
         ParticleFilterNode pfn;
 
-        arma::mat m(2,2);
-        m(0,0) = 1;
-        m(0,1) = 2;
-        m(1,0) = 3;
-        m(1,1) = 4;
-        arma::vec v(2);
-        v(0) = 10; v(1) = 10;
-        arma::vec mv = m*v;
-        ROS_INFO("(%f, %f)", mv(0), mv(1));
-
         ros::Rate rate(pfn.predict_freq);
         int freq_ratio = pfn.predict_freq / pfn.update_freq;
         long ct = 0;
-        double t = ros::Time::now().toSec()-0.1;
+        double t = ros::Time::now().toSec();
         while(ros::ok())
         {
             ros::spinOnce();
