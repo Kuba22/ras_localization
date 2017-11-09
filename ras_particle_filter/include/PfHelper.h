@@ -64,17 +64,22 @@ vec crossProduct(vec a, vec b) {
 	return ret;
 }
 
+double roundDouble(double val) {
+	double x = pow(10, 6);
+	return round(val * x) / x;
+}
+
 bool notProperX(rowvec line, vec X, vec P, vec R) {
-	double x = X[0] / X[2];
-	double y = X[1] / X[2];
-	double px = P[0];
-	double py = P[1];
-	double rx = R[0];
-	double ry = R[1];
-	double l1x = line[0];
-	double l1y = line[1];
-	double l2x = line[2];
-	double l2y = line[3];
+	double x = roundDouble(X[0] / X[2]);
+	double y = roundDouble(X[1] / X[2]);
+	double px = roundDouble(P[0]);
+	double py = roundDouble(P[1]);
+	double rx = roundDouble(R[0]);
+	double ry = roundDouble(R[1]);
+	double l1x = roundDouble(line[0]);
+	double l1y = roundDouble(line[1]);
+	double l2x = roundDouble(line[2]);
+	double l2y = roundDouble(line[3]);
 	if (x > l1x && x > l2x
 		|| x < l1x && x < l2x
 		|| y > l1y && y > l2y
@@ -103,25 +108,4 @@ double getRange(mat lines, vec R, double phi) {
 		}
 	}
 	return minR;
-}
-
-vec perpendicularThroughPoint(vec line, vec point){
-	vec ret(3);
-	ret[0] = -line[1];
-	ret[1] = line[0];
-	ret[2] = line[1] * point[0] - line[0] * point[1];
-	return ret;
-}
-
-vec measurement(vec line, vec robot, double alfa)
-{
-	vec l1({ line[0], line[1] });
-	vec l2({ line[2], line[3] });
-	vec ll = crossProduct(l1, l2);
-	vec pl = perpendicularThroughPoint(ll, robot);
-	vec r = crossProduct(ll, pl);
-	double rho = sqrt((r[0] / r[2] - robot[0])*(r[0] / r[2] - robot[0]) + (r[1] / r[2] - robot[1])*(r[1] / r[2] - robot[1]));
-	double phi = atan2(r[1] / r[2] - robot[1], r[0] / r[2] - robot[0]);
-	double theta = phi - robot[2];
-	return vec({ rho, theta });
 }
