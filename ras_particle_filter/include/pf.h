@@ -70,7 +70,6 @@ public:
 		double psi;
 		Psi = arma::zeros<cube>(1, n, M);
 		outlier = arma::zeros<rowvec>(n);
-		mat D = arma::zeros<mat>(M, N);
 		cube v(2, n, M);
 		cube z_hat = arma::zeros<cube>(2, M, N);
 		double gaussian_multiplier = 1 / (2 * datum::pi*sqrt(det(Q)));
@@ -82,21 +81,13 @@ public:
 		for (int i = 0; i < n; i++)
 		{
 			z_m.each_slice() = repmat(z.col(i), 1, M);
-
-			for (int k = 0; k < N; k++)
-			{
-				for (int m = 0; m < M; m++)
-				{
-					vec v = z.col(i) - z_hat.slice(k).col(m);
-					v(1) = mod(v(1) + datum::pi, 2 * datum::pi) - datum::pi;
-					D(m, k) = as_scalar(v.t()*Q_i*v);
-				}
-			}
 			double psiSum = 0;
-			uvec c = index_min(D, 1);
 			for (int m = 0; m < M; m++)
 			{
-				psi = gaussian_multiplier*std::exp(-0.5*D(m, c(m)));
+				vec v = z.col(i) - z_hat.slice(i).col(m);
+				v(1) = mod(v(1) + datum::pi, 2 * datum::pi) - datum::pi;
+				double D = as_scalar(v.t()*Q_i*v);
+				psi = gaussian_multiplier*std::exp(-0.5*D);
 				Psi(0, i, m) = psi;
 				psiSum = psiSum + psi;
 			}

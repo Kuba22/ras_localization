@@ -104,6 +104,7 @@ public:
         vec m = mean(s, 1);
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = "odom";
+        pose.header.stamp = ros::Time::now();
         pose.pose.position.x = m(0);
         pose.pose.position.y = m(1);
         pose.pose.orientation.z = sin(0.5*m(2));
@@ -139,9 +140,9 @@ public:
                 return;
             }
             ObservationsFromScan();
-            std::cout<<z<<std::endl;
             pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
             int outliers = (int)double(arma::as_scalar(arma::sum(outlier)));
+            //std::cout<<"outliers "<<outliers<<" of "<<outlier.n_elem<<std::endl;
             if (outliers == outlier.n_elem) {
                 S = S_bar;
                 return;
@@ -164,7 +165,7 @@ int main(int argc, char *argv[])
         ros::Rate rate(pfn.predict_freq);
         int freq_ratio = pfn.predict_freq / pfn.update_freq;
         long ct = 0;
-        double t = ros::Time::now().toSec()-0.1;
+        double t = ros::Time::now().toSec();
         while(ros::ok())
         {
             ros::spinOnce();
