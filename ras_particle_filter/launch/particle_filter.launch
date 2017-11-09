@@ -1,20 +1,21 @@
 <launch>
+	<node pkg="rosbag" type="play" name="player" args="--clock /home/ras/catkin_ws/src/ras_rplidar/ScanBagFiles/long-2017-10-24-19-37-26.bag" />
 	<include file="$(find ras_maze_launch)/launch/maze_visualize.launch"/>
 	<node pkg="ras_odometry" type="odometry" name="odometry"/>
-	<include file="$(find ras_line_detector)/launch/line_detector.launch"/>
 	<node name="particle_filter" type="particle_filter" pkg="ras_particle_filter" output="screen" />
 
 	<param name="predict_freq" type="int" value="10" />
 	<param name="update_freq" type="int" value="5" />
 	<rosparam param="start_pose">[0.0, 0.0, 1.570796]</rosparam>
 	<param name="Lambda_psi" type="double" value="0.001" />
-	<param name="M" type="int" value="150" />
+	<param name="M" type="int" value="200" />
 	<rosparam param="R">[10.0, 10.0, 10.0]</rosparam>
 	<rosparam param="Q">[0.03, 0.03]</rosparam>
 	<param name="part_bound" type="double" value="0.0" />
 	<rosparam param="bound">[0.0, 1.0, 0.0, 1.0]</rosparam>
 	<param name="n_particles_to_pub" type="int" value="50" />
 	<param name="init_particle_spread" type="double" value="0.05" />
+	<param name="n_phi" type="int" value="8" />
 
 	<!-- set this to the right map file -->
 	<param name="map_file" type="string" value="/home/ras/catkin_ws/src/ras_maze/ras_maze_map/maps/lab_maze_2017.txt" />

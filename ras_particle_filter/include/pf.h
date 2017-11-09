@@ -61,10 +61,10 @@ public:
 		return S_bar;
 	}
 
-	void associate(mat S_bar, mat z, mat W, double Lambda_psi, mat Q, rowvec& outlier, cube& Psi, vec phi)
+	void associate(mat S_bar, mat z, mat W, double Lambda_psi, mat Q, rowvec& outlier, cube& Psi)
 	{
 		int n = z.n_cols;
-		int N = W.n_rows;
+		int N = z.n_cols;
 		int M = S_bar.n_cols;
 		cube z_m(2, M, N);
 		double psi;
@@ -77,7 +77,7 @@ public:
 		mat Q_i = Q.i();
 		for (int k = 0; k < N; k++)
 		{
-			z_hat.slice(k) = observation_model(S_bar, W, phi(k));
+			z_hat.slice(k) = observation_model(S_bar, W, z(1, k));
 		}
 		for (int i = 0; i < n; i++)
 		{
@@ -89,7 +89,6 @@ public:
 				{
 					vec v = z.col(i) - z_hat.slice(k).col(m);
 					v(1) = mod(v(1) + datum::pi, 2 * datum::pi) - datum::pi;
-
 					D(m, k) = as_scalar(v.t()*Q_i*v);
 				}
 			}
