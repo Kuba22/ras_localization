@@ -43,7 +43,7 @@ mat readLines(string map_file)
 		lines = join_cols(lines, linevec);
 	}
 
-	lines.shed_row(lines.n_rows - 1);
+	lines.shed_row(0);
 	return lines;
 }
 
