@@ -80,7 +80,7 @@ public:
     {
         R = diagmat(vec(R_vec));
         Q = diagmat(vec(Q_vec));
-        pf.init(vec(bound), part_bound, vec(start_pose), S, M, init_particle_spread);
+        pf.init(vec(bound), part_bound, vec(start_pose), S, R, Q, M, init_particle_spread);
     }
 
     void PublishParticles()
@@ -129,7 +129,7 @@ public:
         double dt = ros::Time::now().toSec() - t;
         double v = twist.linear.x;
         double w = twist.angular.z;
-        S_bar = pf.predict(S, v, w, R, dt);
+        S_bar = pf.predict(S, v, w, dt);
         t = ros::Time::now().toSec();
         if(ct++%freq_ratio==0)
         {
