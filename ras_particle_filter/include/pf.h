@@ -18,9 +18,8 @@ public:
 		normal_kw = normal_distribution<double>(0, sqrt(R(2, 2)) + 1e-9);
 		if (!start_pose.is_empty() && particle_spread>0)
 		{
-			default_random_engine gen;
 			normal_distribution<double> normal(0, particle_spread + 1e-9);
-			std::uniform_real_distribution<double> unif(0.0, datum::pi);
+			std::uniform_real_distribution<double> unif(0.0, 2*datum::pi);
 			S = mat(4, M);
 			double iM = 1.0 / M;
 			for (int m = 0; m<M; m++)
@@ -31,7 +30,7 @@ public:
 				S(3, m) = iM;
 			}
 		}
-		if (!start_pose.is_empty())
+		else if (!start_pose.is_empty())
 		{
 			S = join_cols(repmat(start_pose, 1, M), (1.0 / M)*arma::ones<mat>(1, M));
 		}
