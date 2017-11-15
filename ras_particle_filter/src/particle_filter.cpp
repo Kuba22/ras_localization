@@ -81,6 +81,8 @@ public:
         R = diagmat(vec(R_vec));
         Q = diagmat(vec(Q_vec));
         pf.init(vec(bound), part_bound, vec(start_pose), S, R, Q, M, init_particle_spread);
+        //std::cout<<"init"<<std::endl;
+        //std::cout<<S<<std::endl;
     }
 
     void PublishParticles()
@@ -123,14 +125,21 @@ public:
         }
         z.shed_col(0);
     }
-
+long chuj =0;
     void MCL(long& ct, double& t, int freq_ratio)
     {
         double dt = ros::Time::now().toSec() - t;
         double v = twist.linear.x;
         double w = twist.angular.z;
+        //std::cout<<"v "<<v<<" w "<<w<<std::endl;
+        //std::cout<<S<<std::endl;
         S_bar = pf.predict(S, v, w, dt);
+        S = S_bar;//check this
+        if(chuj++%100==0)std::cout<<rowvec({arma::var(S.row(0)), arma::var(S.row(1))})<<std::endl;
+        //std::cout<<"predict"<<std::endl;
+        //std::cout<<S.t()<<std::endl;
         t = ros::Time::now().toSec();
+        return;
         if(ct++%freq_ratio==0)
         {
             W = readLines(map_file);
@@ -141,6 +150,10 @@ public:
             }
             ObservationsFromScan();
             pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
+            //std::cout<<"z"<<std::endl;
+            //std::cout<<z<<std::endl;
+            //std::cout<<"Psi"<<std::endl;
+            //std::cout<<Psi<<std::endl;
             int outliers = (int)double(arma::as_scalar(arma::sum(outlier)));
             //std::cout<<"outliers "<<outliers<<" of "<<outlier.n_elem<<std::endl;
             if (outliers == outlier.n_elem) {
@@ -148,7 +161,9 @@ public:
                 return;
             }
             S_bar = pf.weight(S_bar, Psi, outlier);
+            //std::cout<<S_bar.t()<<std::endl;
             S = pf.resample(S_bar);
+            //std::cout<<"resample"<<std::endl;
         }
         else{
             S = S_bar;
@@ -163,7 +178,7 @@ int main(int argc, char *argv[])
         ParticleFilterNode pfn;
 
         ros::Rate rate(pfn.predict_freq);
-        int freq_ratio = pfn.predict_freq / pfn.update_freq;
+        int freq_ratio = (double)pfn.predict_freq / (double)pfn.update_freq;
         long ct = 0;
         double t = ros::Time::now().toSec();
         while(ros::ok())

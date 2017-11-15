@@ -6,14 +6,10 @@ using namespace arma;
 
 class ParticleFilter {
 	random_device rd;
-	default_random_engine gen;
-	default_random_engine gen_x;
-	default_random_engine gen_y;
-	default_random_engine gen_v;
-	default_random_engine gen_w;
+	default_random_engine gen_x, gen_y, gen, gen_v, gen_w;
 	normal_distribution<double> normal_kv;
 	normal_distribution<double> normal_kw;
-	normal_distribution<double> normal_kd;
+	normal_distribution<double> normal_kd_x, normal_kd_y;
 public:
 	void init(vec bound, double part_bound, vec start_pose, mat& S, mat R, mat Q, int M, double particle_spread)
 	{
@@ -22,7 +18,8 @@ public:
 		gen_y = default_random_engine(rd());
 		gen_v = default_random_engine(rd());
 		gen_w = default_random_engine(rd());
-		normal_kd = normal_distribution<double>(0, sqrt(R(0, 0)) + 1e-9);
+		normal_kd_x = normal_distribution<double>(0, sqrt(R(0, 0)) + 1e-9);
+		normal_kd_y = normal_distribution<double>(0, sqrt(R(0, 0)) + 1e-9);
 		normal_kv = normal_distribution<double>(0, sqrt(R(1, 1)) + 1e-9);
 		normal_kw = normal_distribution<double>(0, sqrt(R(2, 2)) + 1e-9);
 		if (!start_pose.is_empty() && particle_spread>0)
@@ -33,8 +30,8 @@ public:
 			double iM = 1.0 / M;
 			for (int m = 0; m<M; m++)
 			{
-				S(0, m) = start_pose(0) + normal(gen);
-				S(1, m) = start_pose(1) + normal(gen);
+				S(0, m) = start_pose(0) + normal_kd_x(gen_x);
+				S(1, m) = start_pose(1) + normal_kd_y(gen_y);
 				S(2, m) = unif(gen);
 				S(3, m) = iM;
 			}
@@ -66,8 +63,8 @@ public:
 		mat dS(4, M);
 		for (int m = 0; m < M; m++) {
 			dS.col(m) = vec({
-				abs(v*delta_t)*normal_kd(gen_x),
-				abs(v*delta_t)*normal_kd(gen_y),
+				abs(v*delta_t)*normal_kd_x(gen_x),
+				abs(v*delta_t)*normal_kd_y(gen_y),
 				abs(v*delta_t)*normal_kv(gen_v) + abs(omega*delta_t)*normal_kw(gen_w), 0 });
 		}
 		mat u = join_cols(join_cols(join_cols(v*arma::cos(S.row(2)), v*arma::sin(S.row(2))), omega*ones<mat>(1, M)), zeros<mat>(1, M))*delta_t;
