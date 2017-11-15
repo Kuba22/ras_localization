@@ -142,7 +142,6 @@ public:
             ObservationsFromScan();
             pf.associate(S_bar, z, W, Lambda_psi, Q, outlier, Psi);
             int outliers = (int)double(arma::as_scalar(arma::sum(outlier)));
-            //std::cout<<"outliers "<<outliers<<" of "<<outlier.n_elem<<std::endl;
             if (outliers == outlier.n_elem) {
                 S = S_bar;
                 return;
@@ -163,7 +162,7 @@ int main(int argc, char *argv[])
         ParticleFilterNode pfn;
 
         ros::Rate rate(pfn.predict_freq);
-        int freq_ratio = pfn.predict_freq / pfn.update_freq;
+        int freq_ratio = (double)pfn.predict_freq / (double)pfn.update_freq;
         long ct = 0;
         double t = ros::Time::now().toSec();
         while(ros::ok())
