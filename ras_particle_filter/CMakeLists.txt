@@ -3,7 +3,7 @@ project(ras_particle_filter)
 
 add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs sensor_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs sensor_msgs tf)
 find_package(Armadillo REQUIRED)
 
 catkin_package(

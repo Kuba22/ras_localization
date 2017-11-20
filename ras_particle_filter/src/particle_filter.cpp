@@ -5,6 +5,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <tf/transform_broadcaster.h>
 
 #include <iostream>
 
@@ -16,6 +17,7 @@ public:
     ros::NodeHandle nh;
     ros::Subscriber twist_sub, scan_sub;
     ros::Publisher particles_pub, pose_estimate_pub;
+	tf::TransformBroadcaster broadcaster;
     ParticleFilter pf;
 
     geometry_msgs::Twist twist;
@@ -110,6 +112,16 @@ public:
         pose.pose.orientation.z = sin(0.5*m(2));
         pose.pose.orientation.w = cos(0.5*m(2));
         pose_estimate_pub.publish(pose);
+
+		geometry_msgs::TransformStamped odom_trans;
+	    odom_trans.header.frame_id = "odom";
+	    odom_trans.child_frame_id = "base_link";
+		odom_trans.header.stamp = ros::Time::now();
+	    odom_trans.transform.translation.x = m(0);
+	    odom_trans.transform.translation.y = m(1);
+	    odom_trans.transform.translation.z = 0;
+	    odom_trans.transform.rotation = tf::createQuaternionMsgFromYaw(m(2));
+	    broadcaster.sendTransform(odom_trans);
     }
 
     void ObservationsFromScan(){
@@ -160,7 +172,7 @@ int main(int argc, char *argv[])
 	ros::init(argc, argv, "particle_filter");
         ROS_INFO("Particle Filter Node");
         ParticleFilterNode pfn;
-
+		
         ros::Rate rate(pfn.predict_freq);
         int freq_ratio = (double)pfn.predict_freq / (double)pfn.update_freq;
         long ct = 0;

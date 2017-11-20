@@ -3,7 +3,7 @@ project(ras_odometry)
 
 add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED COMPONENTS roscpp phidgets tf geometry_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp phidgets geometry_msgs)
 
 catkin_package(
 #  INCLUDE_DIRS include
