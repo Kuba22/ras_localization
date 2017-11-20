@@ -65,7 +65,7 @@ vec crossProduct(vec a, vec b) {
 }
 
 double roundDouble(double val) {
-	double x = pow(10, 6);
+	double x = 1000000.0;
 	return round(val * x) / x;
 }
 
