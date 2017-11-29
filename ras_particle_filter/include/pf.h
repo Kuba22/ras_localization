@@ -51,7 +51,7 @@ public:
 		int M = S.n_cols;
 		mat h(2, M);
 		for (int m = 0; m < M; m++) {
-			h.col(m) = vec({ getRange(W, S.col(m), phi), phi });
+			h.col(m) = vec({ PfHelper::getRange(W, S.col(m), phi), phi });
 		}
 		return h;
 	}

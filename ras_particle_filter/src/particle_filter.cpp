@@ -83,6 +83,7 @@ public:
         R = diagmat(vec(R_vec));
         Q = diagmat(vec(Q_vec));
         pf.init(vec(bound), part_bound, vec(start_pose), S, R, Q, M, init_particle_spread);
+        W = PfHelper::readLines(map_file);
     }
 
     void PublishParticles()
@@ -145,7 +146,6 @@ public:
         t = ros::Time::now().toSec();
         if(ct++%freq_ratio==0)
         {
-            W = readLines(map_file);
             if(!received_scan){
                 ROS_WARN("No scan messages received yet.");
                 S = S_bar;

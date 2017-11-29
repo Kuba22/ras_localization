@@ -1,5 +1,8 @@
 <launch>
-	<node pkg="rosbag" type="play" name="player" args="--clock -s 20 /home/ras/catkin_ws/src/ras_rplidar/ScanBagFiles/2017-11-09-17-long-loop-closure.bag" />
+	<rosparam param="use_sim_time">true</rosparam>
+	<node pkg="rosbag" type="play" name="player" args="--clock -s 12 /home/ras/catkin_ws/src/ras_rplidar/ScanBagFiles/no_tf.bag" />
+	<node pkg="tf" type="static_transform_publisher" name="laser_to_odom" 
+args="0 0 0 0 0 1 0 /base_link /laser 30" />
 	<include file="$(find ras_maze_launch)/launch/maze_visualize.launch">
 		<arg name="map_file" value="lab_maze_2017.txt" />
   		<arg name="x_offset" value="0.0"/>
@@ -12,9 +15,9 @@
 	<param name="predict_freq" type="int" value="10" />
 	<param name="update_freq" type="int" value="5" />
 	<rosparam param="start_pose">[0.2, 0.4, 1.570796]</rosparam>
-	<param name="Lambda_psi" type="double" value="0.001" />
+	<param name="Lambda_psi" type="double" value="0.01" />
 	<param name="M" type="int" value="100" />
-	<rosparam param="R">[1.0, 1.0, 1.0]</rosparam>
+	<rosparam param="R">[0.2, 0.3, 1.0]</rosparam>
 	<rosparam param="Q">[0.005, 1e-12]</rosparam>
 	<param name="part_bound" type="double" value="0.0" />
 	<rosparam param="bound">[0.0, 1.0, 0.0, 1.0]</rosparam>
