@@ -25,14 +25,13 @@ public:
 		if (!start_pose.is_empty() && particle_spread>0)
 		{
 			normal_distribution<double> normal(0, particle_spread + 1e-9);
-			std::uniform_real_distribution<double> unif(0.0, 2*datum::pi);
 			S = mat(4, M);
 			double iM = 1.0 / M;
 			for (int m = 0; m<M; m++)
 			{
 				S(0, m) = start_pose(0) + normal_kd_x(gen_x);
 				S(1, m) = start_pose(1) + normal_kd_y(gen_y);
-				S(2, m) = unif(gen);
+				S(2, m) = start_pose(2) + normal(gen);
 				S(3, m) = iM;
 			}
 		}
@@ -56,16 +55,26 @@ public:
 		return h;
 	}
 
-	mat predict(mat S, double v, double omega, double delta_t)
+	mat predict(mat S, double v, double omega, double delta_t, bool noise_speed)
 	{
 		int M = S.n_cols;
 
 		mat dS(4, M);
-		for (int m = 0; m < M; m++) {
-			dS.col(m) = vec({
-				abs(v*delta_t)*normal_kd_x(gen_x),
-				abs(v*delta_t)*normal_kd_y(gen_y),
-				abs(v*delta_t)*normal_kv(gen_v) + abs(omega*delta_t)*normal_kw(gen_w), 0 });
+		if(noise_speed){
+			for (int m = 0; m < M; m++) {
+				dS.col(m) = vec({
+					abs(v*delta_t)*normal_kd_x(gen_x),
+					abs(v*delta_t)*normal_kd_y(gen_y),
+					abs(v*delta_t)*normal_kv(gen_v) + abs(omega*delta_t)*normal_kw(gen_w), 0 });
+			}
+		}
+		else{
+			for (int m = 0; m < M; m++) {
+				dS.col(m) = vec({
+					delta_t*normal_kd_x(gen_x),
+					delta_t*normal_kd_y(gen_y),
+					delta_t*normal_kw(gen_w), 0 });
+			}
 		}
 		mat u = join_cols(join_cols(join_cols(v*arma::cos(S.row(2)), v*arma::sin(S.row(2))), omega*ones<mat>(1, M)), zeros<mat>(1, M))*delta_t;
 		mat S_bar = S + u + dS;

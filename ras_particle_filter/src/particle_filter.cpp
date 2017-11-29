@@ -34,6 +34,7 @@ public:
     int npp, n_phi;
     string map_file;
     double init_particle_spread;
+    bool noise_speed;
 
     mat S, R, Q, S_bar, z, W;
     cube Psi;
@@ -76,6 +77,7 @@ public:
         nh.getParam("map_file", map_file);
         nh.param("init_particle_spread", init_particle_spread, -1.0);
         nh.param("n_phi", n_phi, 10);
+        nh.param("noise_speed", noise_speed, true);
     }
 
     void InitializePf()
@@ -90,6 +92,7 @@ public:
     {
         geometry_msgs::PoseArray particles_msg;
         particles_msg.header.frame_id = "odom";
+        particles_msg.header.stamp = ros::Time::now();
         for(int i = 0; i < npp; i++){
             geometry_msgs::Pose pose;
             pose.position.x = S(0, i);
@@ -142,8 +145,12 @@ public:
         double dt = ros::Time::now().toSec() - t;
         double v = twist.linear.x;
         double w = twist.angular.z;
-        S_bar = pf.predict(S, v, w, dt);
+        S_bar = pf.predict(S, v, w, dt, noise_speed);
         t = ros::Time::now().toSec();
+        if(dt > 1000){//for simulation
+            ROS_INFO("Skipping because of high dt");
+            return;
+        }
         if(ct++%freq_ratio==0)
         {
             if(!received_scan){
