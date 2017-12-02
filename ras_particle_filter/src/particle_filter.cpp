@@ -106,8 +106,7 @@ public:
 
     void PublishPoseEstimate()
     {
-        mat s = S.rows(0, 2).cols(0, npp-1);
-        vec m = mean(s, 1);
+        vec m = mean(S.rows(0, 2), 1);
         geometry_msgs::PoseStamped pose;
         pose.header.frame_id = "odom";
         pose.header.stamp = ros::Time::now();
